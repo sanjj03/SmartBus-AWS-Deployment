@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="page-title">⚙ Admin Control Panel</h2>
+
+<div class="row">
+
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center">
+            <h4>Backup to S3</h4>
+            <p><small>Exports current fleet data as CSV and uploads it to your S3 bucket.</small></p>
+            <button class="btn btn-success" onclick="runBackup()">Backup Now</button>
+            <p id="backupStatus" class="mt-2"></p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center">
+            <h4>Total Routes</h4>
+            <h1>{{ total_routes }}</h1>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="glass-card p-4 text-center">
+            <h4>Total Fleet</h4>
+            <h1>{{ total_buses }}</h1>
+        </div>
+    </div>
+
+</div>
+
+<br>
+
+<div class="glass-card p-4">
+
+    <h4>Fleet Overview</h4>
+    <hr>
+
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Bus Number</th>
+            <th>Driver</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for b in buses %}
+        <tr>
+            <td>{{ b.bus_number }}</td>
+            <td>{{ b.driver_name }}</td>
+            <td>
+                {% if b.status == 'running' %}
+                <span class="badge bg-success">Running</span>
+                {% elif b.status == 'delayed' %}
+                <span class="badge bg-warning">Delayed</span>
+                {% else %}
+                <span class="badge bg-secondary">Maintenance</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+function runBackup() {
+    const statusEl = document.getElementById('backupStatus');
+    statusEl.textContent = 'Uploading...';
+    fetch('/admin/backup', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            statusEl.textContent = data.message;
+            statusEl.style.color = data.success ? 'green' : 'red';
+        })
+        .catch(err => {
+            statusEl.textContent = 'Backup failed: ' + err;
+            statusEl.style.color = 'red';
+        });
+}
+</script>
+
+{% endblock %}

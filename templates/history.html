@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="page-title">📊 Historical Analytics</h2>
+
+<div class="row">
+
+    <div class="col-lg-6">
+        <div class="glass-card p-4">
+            <h4>Daily Trips (last 30 days, from RDS)</h4>
+            <canvas id="tripChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="glass-card p-4">
+            <h4>On-Time vs Delayed</h4>
+            <canvas id="delayChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+new Chart(document.getElementById('tripChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ trip_labels | tojson }},
+        datasets: [{
+            label: 'Trips',
+            data: {{ trip_values | tojson }},
+            backgroundColor: '#2563eb'
+        }]
+    }
+});
+
+new Chart(document.getElementById('delayChart'), {
+    type: 'pie',
+    data: {
+        labels: ['On Time', 'Delayed'],
+        datasets: [{
+            data: [{{ on_time }}, {{ delayed }}],
+            backgroundColor: ['#059669', '#ea580c']
+        }]
+    }
+});
+
+</script>
+
+{% endblock %}

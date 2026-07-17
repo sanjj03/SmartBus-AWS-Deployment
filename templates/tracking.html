@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="page-title">📍 SmartBus Live Tracking Center</h2>
+
+<div class="row">
+
+    <div class="col-lg-8">
+        <div class="glass-card p-4">
+            <h4>Real-Time Fleet Map <span class="badge bg-success" id="liveBadge">● LIVE</span></h4>
+            <div id="map" style="height:550px;border-radius:15px;"></div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h4>Fleet Summary</h4>
+            <hr>
+            <p><strong>Total Buses:</strong> <span id="totalBuses">{{ buses|length }}</span></p>
+            <p><strong>Running:</strong> <span id="runningBuses">-</span></p>
+            <p><strong>Delayed:</strong> <span id="delayedBuses">-</span></p>
+            <p><strong>Maintenance:</strong> <span id="maintenanceBuses">-</span></p>
+        </div>
+
+        <br>
+
+        <div class="glass-card p-4">
+            <h4>Fleet List</h4>
+            <hr>
+            <div id="busList">
+                {% for b in buses %}
+                <p>
+                    <strong>{{ b.bus_number }}</strong> — {{ b.route_name }}
+                    <br><small>Driver: {{ b.driver_name }} | Status: {{ b.status }}</small>
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+var map = L.map('map').setView([18.9200, 73.3300], 9);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+var statusColors = { running: 'green', delayed: 'orange', maintenance: 'gray' };
+var markers = {};
+
+function busIcon(status) {
+    return L.divIcon({
+        className: 'bus-marker',
+        html: `<div style="background:${statusColors[status] || 'blue'};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 4px rgba(0,0,0,0.5);"></div>`,
+        iconSize: [16, 16]
+    });
+}
+
+function refreshBuses() {
+    fetch('/api/live-locations')
+        .then(res => res.json())
+        .then(data => {
+            let running = 0, delayed = 0, maintenance = 0;
+
+            data.forEach(bus => {
+                if (bus.status === 'running') running++;
+                else if (bus.status === 'delayed') delayed++;
+                else maintenance++;
+
+                if (bus.lat == null || bus.lng == null) return;
+
+                const popupText = `<strong>${bus.bus_number}</strong><br>Route: ${bus.route_name}<br>Status: ${bus.status}<br>ETA: ${bus.eta_minutes ?? '-'} min`;
+
+                if (markers[bus.bus_id]) {
+                    markers[bus.bus_id].setLatLng([bus.lat, bus.lng]);
+                    markers[bus.bus_id].setIcon(busIcon(bus.status));
+                    markers[bus.bus_id].getPopup().setContent(popupText);
+                } else {
+                    markers[bus.bus_id] = L.marker([bus.lat, bus.lng], { icon: busIcon(bus.status) })
+                        .addTo(map)
+                        .bindPopup(popupText);
+                }
+            });
+
+            document.getElementById('runningBuses').textContent = running;
+            document.getElementById('delayedBuses').textContent = delayed;
+            document.getElementById('maintenanceBuses').textContent = maintenance;
+        })
+        .catch(err => console.error('Failed to refresh bus locations:', err));
+}
+
+refreshBuses();
+setInterval(refreshBuses, 4000);
+</script>
+
+{% endblock %}

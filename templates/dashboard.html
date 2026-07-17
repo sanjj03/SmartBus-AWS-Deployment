@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="page-title">🚍 SmartBus Operations Center</h2>
+
+<div class="row g-4">
+
+<div class="col-md-3">
+<div class="stat-card gradient1">
+<h6>Active Fleet</h6>
+<h1>{{ active_fleet }}</h1>
+<p>Running Buses</p>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="stat-card gradient2">
+<h6>Passengers Today</h6>
+<h1>{{ "{:,}".format(passengers) }}</h1>
+<p>Daily Ridership</p>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="stat-card gradient3">
+<h6>On-Time Rate</h6>
+<h1>{{ on_time_rate }}%</h1>
+<p>Service Reliability</p>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="stat-card gradient4">
+<h6>Avg Delay</h6>
+<h1>{{ avg_delay }}m</h1>
+<p>Network Performance</p>
+</div>
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-lg-8">
+<div class="glass-card">
+<h4>Transport Performance (last 7 days, live from RDS)</h4>
+<canvas id="routeChart"></canvas>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="glass-card">
+<h4>Network Status</h4>
+<hr>
+<p>🟢 Normal Operations</p>
+<p>🟡 Moderate Traffic</p>
+<p>🔴 {{ delayed_count }} Delayed Bus{{ 'es' if delayed_count != 1 else '' }}</p>
+<p>⚡ Live Tracking Active</p>
+</div>
+</div>
+
+</div>
+
+<script>
+
+new Chart(document.getElementById('routeChart'), {
+    type: 'line',
+    data: {
+        labels: {{ trend_labels | tojson }},
+        datasets: [{
+            label: 'Trips',
+            data: {{ trend_values | tojson }},
+            borderWidth: 4,
+            tension: 0.4,
+            fill: true
+        }]
+    }
+});
+
+</script>
+
+{% endblock %}

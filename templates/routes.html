@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2 class="page-title">🛣 Route Management</h2>
+
+<div class="glass-card p-4">
+
+    <input type="text" class="form-control" id="routeSearch" placeholder="Search Route" onkeyup="filterRoutes()">
+
+    <br>
+
+    <table class="table table-hover" id="routeTable">
+
+        <thead>
+        <tr>
+            <th>Route Code</th>
+            <th>Route Name</th>
+            <th>Source</th>
+            <th>Destination</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for r in routes %}
+        <tr>
+            <td>{{ r.route_code }}</td>
+            <td>{{ r.route_name }}</td>
+            <td>{{ r.origin }}</td>
+            <td>{{ r.destination }}</td>
+            <td>
+                {% if r.status == 'Active' %}
+                <span class="badge bg-success">Active</span>
+                {% else %}
+                <span class="badge bg-warning">{{ r.status }}</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+
+    </table>
+
+</div>
+
+<script>
+function filterRoutes() {
+    const q = document.getElementById('routeSearch').value.toLowerCase();
+    document.querySelectorAll('#routeTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+</script>
+
+{% endblock %}
